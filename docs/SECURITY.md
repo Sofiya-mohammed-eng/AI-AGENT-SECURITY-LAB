@@ -1,7 +1,7 @@
 # Security design: taskboard-support-agent
 
 A small tool-calling agent built to demonstrate — not just claim — basic
-AI agent security practices, instrumented end-to-end with Datadog LLM
+AI agent security practices, with a local audit log and optional Datadog LLM
 Observability.
 
 ## Threat model
@@ -30,8 +30,8 @@ on behalf of a user. The relevant threats for this kind of system:
 - **Tool output is never trusted as instructions.** The system prompt
   explicitly tells the model that tool results are data, not commands,
   and to flag — not follow — any embedded instructions.
-- **An independent, code-level guard (`_flag_suspicious` in
-  `agent/agent.py`) scans every tool result for injection-style
+- **An independent, code-level guard (`flag_suspicious` in
+  `agent/guards.py`) scans every tool result for injection-style
   patterns before it reaches the model**, prepending an explicit
   warning. This doesn't rely on the model choosing to behave — it's a
   second layer enforced in code.
@@ -44,8 +44,8 @@ on behalf of a user. The relevant threats for this kind of system:
 - **The calculator tool has no code-execution surface.** It parses
   input with Python's `ast` module and only evaluates a fixed set of
   arithmetic operators — no `eval()`, no names, no function calls.
-- **Every run is traced with Datadog LLM Observability**
-  (`ddtrace-run`, `DD_LLMOBS_ENABLED=1`), so the full prompt, tool
+- **Every run is logged locally and can optionally be traced with
+  Datadog LLM Observability** (`ddtrace-run`, `DD_LLMOBS_ENABLED=1`), so the full prompt, tool
   calls, tool results, and model response are visible per request —
   not just whether it succeeded, but what the model actually saw and
   said.
@@ -71,16 +71,57 @@ identified it as an injection attempt, and refused to comply. The
 code-level flag likely contributed here: the model saw the result
 already prefixed with a security warning, not the raw payload alone.
 
+## Added in version 2
+
+These changes respond to the findings above. **Only the offline tests
+have been run against them. Whether grounding actually removes the
+hallucination in Finding 1 must be confirmed with the live tests
+(`RUN_LIVE=1 python3 -m unittest tests.test_live -v`).**
+
+- **Grounding rules in the system prompt** (answer only from retrieved
+  entries, cite ids, say "I don't know" otherwise). This is a prompt-level
+  mitigation, so it reduces the problem but cannot guarantee it.
+- **Wider injection guard** (`agent/guards.py`): override and reveal
+  patterns with a few words of slack, role-claim phrases, Unicode
+  normalisation so zero-width and full-width tricks are caught.
+- **Output checks:** key redaction and detection of the model quoting its
+  own system prompt, applied to every final answer.
+- **Calculator limits:** 200 characters, exponent up to 100, results up
+  to about 1e300, checked before computing.
+- **Input limits and a client-side rate limiter** (20 messages per minute
+  in chat mode, 2000 characters per message).
+- **Safe memory (`Conversation`):** only user messages and final answers
+  are kept; tool results are never carried between turns; an earlier
+  answer containing suspicious text is replaced by a placeholder; history
+  is capped; `/reset` clears it.
+- **Audit log:** JSON lines with key redaction; logging failures never
+  crash the agent.
+- **Search:** BM25 ranking with stemming and synonyms over 12 public
+  documents. Internal documents are removed before the index is built, so
+  they cannot be matched at all. An entry with no `access` field is
+  treated as not public.
+
+## Known limitations
+
+- The injection guard is a pattern heuristic. It misses other languages
+  (documented by an expected-failure test), heavy paraphrase, and
+  encodings such as base64. It only adds a warning; it does not block.
+- The prompt-leak check only catches long verbatim quotes (12+ words).
+- The search is keyword relevance with synonyms, not embedding-based
+  semantic search. Words with no entry in the synonym groups will not
+  match different wording.
+- Grounding depends on the model following instructions. It is measured
+  by live tests, which are sample-based because model output varies.
+- The rate limiter lives in the chat script only. A deployed service would
+  need per-user limits, authentication and spend caps at the API layer.
+- The sample documents are fictional.
+
 ## Explicitly out of scope for this lab
 
 - Network-level controls (this runs as a local script, not a deployed
   service behind an API gateway or WAF).
-- Rate limiting and cost controls on the LLM API itself.
-- Multi-turn conversation state and the injection risks that come with
-  persisted memory across turns.
-- A real vector database; `knowledge_base.json` stands in for one to
-  demonstrate the access-control pattern without adding infrastructure
-  the time available didn't allow for.
+- Authentication, per-user quotas and cost controls on the LLM API itself.
+- A real vector database or embedding model.
 
 ## Stack
 
