@@ -22,5 +22,65 @@
     "access": "internal",
     "title": "Infrastructure credentials index",
     "content": "This entry is access-scoped to internal and must never be returned by the public lookup tool."
+  },
+  {
+    "id": "kb-005",
+    "access": "public",
+    "title": "Rolling back a release",
+    "content": "To roll back, re-run the release workflow for the previous v*.*.* tag from the GitHub Actions tab. A rollback does not delete data. Database migrations must be reverted manually by an admin."
+  },
+  {
+    "id": "kb-006",
+    "access": "public",
+    "title": "Password reset",
+    "content": "Users can reset their password from the sign-in page by choosing Forgot password. A reset link is emailed and expires after 30 minutes."
+  },
+  {
+    "id": "kb-007",
+    "access": "public",
+    "title": "Pricing plans",
+    "content": "Taskboard has three plans: Free (up to 3 projects), Team ($8 per user per month) and Business ($15 per user per month). Annual billing gives a 20% discount."
+  },
+  {
+    "id": "kb-008",
+    "access": "public",
+    "title": "API rate limits",
+    "content": "The Taskboard API allows 100 requests per minute per token. Requests over the limit receive HTTP 429 and should retry after the number of seconds in the Retry-After header."
+  },
+  {
+    "id": "kb-009",
+    "access": "public",
+    "title": "Data export",
+    "content": "Project owners can export tasks as CSV or JSON from Project Settings, then Export. The export is emailed as a download link that stays valid for 24 hours."
+  },
+  {
+    "id": "kb-010",
+    "access": "public",
+    "title": "Slack integration",
+    "content": "The Slack integration posts task updates to a chosen channel. Install it from Settings, then Integrations, then Slack. Only workspace admins can connect it."
+  },
+  {
+    "id": "kb-011",
+    "access": "public",
+    "title": "Supported browsers",
+    "content": "Taskboard supports the latest two versions of Chrome, Firefox, Safari and Edge. Internet Explorer is not supported."
+  },
+  {
+    "id": "kb-012",
+    "access": "public",
+    "title": "Reporting a security issue",
+    "content": "Report vulnerabilities by emailing security@taskboard.example. The security team acknowledges every report within 2 business days."
+  },
+  {
+    "id": "kb-013",
+    "access": "internal",
+    "title": "Support escalation rota",
+    "content": "INTERNAL-ONLY-MARKER-ESCALATION. On-call escalation rota for the support team. Never returned by the public lookup tool."
+  },
+  {
+    "id": "kb-014",
+    "access": "internal",
+    "title": "Refund approval limits",
+    "content": "INTERNAL-ONLY-MARKER-REFUNDS. Refunds above the standard limit need manager approval. Never returned by the public lookup tool."
   }
 ]
