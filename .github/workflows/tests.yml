@@ -1,0 +1,40 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Offline tests use a fake model: no API key and no internet needed.
+      # Live tests are skipped automatically because RUN_LIVE is not set.
+      - name: Run offline tests
+        run: python -m unittest -v
+
+      # Fail the build if a real-looking Groq key is ever committed.
+      # The tests folder is excluded because it contains obviously fake keys.
+      - name: Check that no API keys are committed
+        run: |
+          if grep -rIn --exclude-dir=.git --exclude-dir=tests -E "gsk_[A-Za-z0-9]{20,}" . ; then
+            echo "A key-like string was found. Remove it and rotate the key."
+            exit 1
+          fi
