@@ -11,12 +11,13 @@ function el(tag, cls, text) {
 }
 // Safe rendering: only textContent / createElement, never innerHTML.
 function inline(parent, text) {
-  const re = /(\*\*[^*]+\*\*|`[^`]+`|\[kb-\d+\])/g;
+  const re = /(\*\*[^*]+\*\*|\*(?=[^\s*])[^*\n]*[^\s*]\*|`[^`]+`|\[kb-\d+\])/g;
   let last = 0, m;
   while ((m = re.exec(text))) {
     if (m.index > last) parent.append(text.slice(last, m.index));
     const t = m[0];
     parent.append(t.startsWith("**") ? el("strong", null, t.slice(2, -2))
+      : t[0] === "*" ? el("em", null, t.slice(1, -1))
       : t[0] === "`" ? el("code", null, t.slice(1, -1)) : el("span", "cite", t.slice(1, -1)));
     last = re.lastIndex;
   }
