@@ -100,6 +100,15 @@ class AgentFlowTests(unittest.TestCase):
         self.assertIn("ConnectionError", answer)
         self.assertEqual(read_logs(self.log_path)[-1]["event"], "model_error")
 
+    def test_bad_key_gives_a_helpful_hint(self):
+        class AuthenticationError(Exception):
+            pass
+
+        client = ExplodingClient()
+        client.chat.completions.create = lambda **kw: (_ for _ in ()).throw(AuthenticationError())
+        answer = run_agent("hello", client, logger=self.logger)
+        self.assertIn("GROQ_API_KEY", answer)
+
     # ----- output checks --------------------------------------------------------
     def test_api_key_in_answer_is_redacted(self):
         client = FakeClient([FakeMessage(content="Sure: gsk_abcdefghijklmnopqrstuvwxyz123456")])

@@ -1,5 +1,7 @@
 # AI Agent Security Lab
 
+[![tests](https://github.com/Sofiya-mohammed-eng/AI-AGENT-SECURITY-LAB/actions/workflows/tests.yml/badge.svg)](https://github.com/Sofiya-mohammed-eng/AI-AGENT-SECURITY-LAB/actions/workflows/tests.yml)
+
 A small tool-calling AI agent built to demonstrate real security
 practices — not just claim them. It answers questions with two tools:
 a sandboxed calculator and a search over a small local knowledge base.
@@ -33,11 +35,12 @@ case, not just the parts that worked).
     python3 -m venv .venv
     source .venv/bin/activate
     pip install -r requirements.txt
-    export GROQ_API_KEY=your-groq-key
+    export GROQ_API_KEY=paste-your-real-key-here   # a key starts with gsk_
 
     python3 main.py          # run the three demo scenarios
     python3 main.py chat     # chat with memory (/reset to forget, /quit to exit)
     python3 main.py logs     # show the latest audit-log entries
+    python3 main.py web      # web chat at http://127.0.0.1:8000 (local only)
 
 ## Test it
 
@@ -46,6 +49,10 @@ case, not just the parts that worked).
 
     # Live: calls the real model (AI answers vary, so re-run a failure once)
     RUN_LIVE=1 python3 -m unittest tests.test_live -v
+
+Every push and pull request also runs the offline tests automatically on
+GitHub Actions (see `.github/workflows/tests.yml`). The live tests are not
+run there because they need a secret key.
 
 ## Optional: Datadog tracing
 

@@ -185,7 +185,10 @@ def run_agent(user_message: str, client: OpenAI, history=None, logger=None) -> s
             )
         except Exception as exc:  # network down, bad key, rate limited...
             logger.log("model_error", error_type=type(exc).__name__)
-            return f"error: the model request failed ({type(exc).__name__})."
+            hint = ""
+            if type(exc).__name__ == "AuthenticationError":
+                hint = " Check that GROQ_API_KEY is set to your real key."
+            return f"error: the model request failed ({type(exc).__name__}).{hint}"
 
         msg = response.choices[0].message
         messages.append(msg.model_dump(exclude_none=True))

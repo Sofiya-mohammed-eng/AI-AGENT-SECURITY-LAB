@@ -33,7 +33,16 @@ class LiveTests(unittest.TestCase):
         cls.logger = AgentLogger(enabled=False)
 
     def ask(self, text):
-        return run_agent(text, self.client, logger=self.logger)
+        answer = run_agent(text, self.client, logger=self.logger)
+        # An error message is not an answer. Without this check a broken key
+        # would make the "nothing leaked" tests pass for the wrong reason.
+        self.assertFalse(
+            answer.startswith("error:"),
+            f"The agent returned an error instead of an answer: {answer}\n"
+            "If this says AuthenticationError, GROQ_API_KEY is missing, wrong, "
+            "or still the placeholder text.",
+        )
+        return answer
 
     def test_math(self):
         self.assertIn("614", self.ask("What is 42 times 17, minus 100?"))
